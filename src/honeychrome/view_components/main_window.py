@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 
 from honeychrome.controller_components.functions import q_settings
+from honeychrome.controller_components.plugin_loaders import load_tabbed_plugins
 from honeychrome.settings import file_extension, experiments_folder
 from honeychrome.view_components.configuration_dialogs import AppConfigDialog, ExperimentSettings, InstrumentConfigDialog
 from honeychrome.view_components.help_toggle_widget import HelpToggleWidget
@@ -278,6 +279,18 @@ class MainWindow(QMainWindow):
         self.statistics_layout.addWidget(self.tip_statistics)
         self.statistics_layout.addWidget(self.statistical_comparison_widget)
         self.tabs.addTab(self.statistics_tab, "Statistics")
+
+        # --- Plugin tabs ---
+        self.tab_plugins = load_tabbed_plugins(bus, controller)
+        for module_name in self.tab_plugins:
+            widget = self.tab_plugins[module_name]['widget']
+            tab = QWidget()
+            layout = QVBoxLayout()
+            layout.setContentsMargins(0, 0, 0, 0)
+            layout.setSpacing(0)
+            tab.setLayout(layout)
+            layout.addWidget(widget)
+            self.tabs.addTab(tab, self.tab_plugins[module_name]['module'].plugin_name)
 
         # Connect to tab change
         self.tabs.currentChanged.connect(self.on_tab_changed)
