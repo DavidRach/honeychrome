@@ -21,9 +21,10 @@ plugin_enabled = True
 class PluginWidget(QWidget):
     """
     The main UI container for the plugin.
-    
-    This widget is instantiated via the register() function and 
-    inserted into the Honeychrome tabbed interface.
+
+    Required arguments:
+        bus: the signals to communicate with the rest of the honeychrome app
+        controller: the honeychrome controller including all ephemeral data and the experiment model
     """
     def __init__(self, bus=None, controller=None, parent=None):
         super().__init__(parent)
