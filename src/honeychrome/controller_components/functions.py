@@ -173,7 +173,6 @@ def apply_transfer_matrix(transfer_matrix, raw_event_data):
         live data updated
         calculate stats
         export unmixed FCS
-    todo update this for WLS unmixing
     '''
     return raw_event_data @ transfer_matrix
 
