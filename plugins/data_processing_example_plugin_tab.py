@@ -73,9 +73,9 @@ class PluginWidget(QWidget):
         self.output_layout = QVBoxLayout(output_widget)
 
         # --- Add gui elements ---
-        self.build_button = QPushButton('Build model')
-        self.build_button.setToolTip('Runs the process on selected samples')
-        self.build_button.clicked.connect(self.build_model)
+        self.train_button = QPushButton('Train model')
+        self.train_button.setToolTip('Runs the training process on concatenated selected samples')
+        self.train_button.clicked.connect(self.train_model)
 
         training_widget = QWidget()
         self.training_layout = QVBoxLayout(training_widget)
@@ -86,7 +86,7 @@ class PluginWidget(QWidget):
         main_layout.addWidget(self.label)
         main_layout.addWidget(self.gate_combo)
         main_layout.addWidget(self.picker)
-        main_layout.addWidget(self.build_button)
+        main_layout.addWidget(self.train_button)
         main_layout.addWidget(training_widget)
         main_layout.addWidget(prediction_widget)
         main_layout.addWidget(output_widget)
@@ -158,10 +158,10 @@ class PluginWidget(QWidget):
         new_labels, strengths = hdbscan.approximate_predict(self.clusterer, new_embedding)
         return new_embedding, new_labels, strengths
 
-    def build_model(self):
+    def train_model(self):
         clear_layout(self.training_layout)
 
-        self.progress_message(f'{datetime.now():%H:%M:%S} Started model building...')
+        self.progress_message(f'{datetime.now():%H:%M:%S} Started model training...')
 
         gate_name = self.gate_combo.currentText()
         if gate_name == "Select Gate:":
@@ -250,7 +250,7 @@ class PluginWidget(QWidget):
             table_widget = CopyableTableWidget(table_data, table_headers)
             self.training_layout.addWidget(table_widget)
 
-            self.progress_message(f'{datetime.now():%H:%M:%S} Finished model building.')
+            self.progress_message(f'{datetime.now():%H:%M:%S} Finished model training.')
             self.progress_message('Click on a sample (in the sample browser) to view it in the same UMAP embedding and clusters.')
 
         except Exception as e:

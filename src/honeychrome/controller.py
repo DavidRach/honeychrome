@@ -763,43 +763,44 @@ class Controller(QObject):
         # calc all hists and stats if they do not already exist or force not set
         # force only necessary for reset axes transforms all and refresh spectral process
 
-        # make sure data for cytometry plots is pointing at correct data
-        self.data_for_cytometry_plots_raw.update({'event_data': self.raw_event_data})
-        self.data_for_cytometry_plots_process.update({'event_data': self.unmixed_event_data})
-        self.data_for_cytometry_plots_unmixed.update({'event_data': self.unmixed_event_data})
+        if self.data_for_cytometry_plots:
+            # make sure data for cytometry plots is pointing at correct data
+            self.data_for_cytometry_plots_raw.update({'event_data': self.raw_event_data})
+            self.data_for_cytometry_plots_process.update({'event_data': self.unmixed_event_data})
+            self.data_for_cytometry_plots_unmixed.update({'event_data': self.unmixed_event_data})
 
-        # recalculate everything if it isn't already present
-        if force_recalc_histograms or not self.data_for_cytometry_plots['statistics'] or not self.data_for_cytometry_plots['histograms']:
-            if self.bus:
-                self.bus.statusMessage.emit(f'Initialising plots and gating statistics...')
+            # recalculate everything if it isn't already present
+            if force_recalc_histograms or not self.data_for_cytometry_plots['statistics'] or not self.data_for_cytometry_plots['histograms']:
+                if self.bus:
+                    self.bus.statusMessage.emit(f'Initialising plots and gating statistics...')
 
-            # for default transformations, set limits to observed data
-            if self.data_for_cytometry_plots['event_data'] is not None and len(self.data_for_cytometry_plots['event_data']):
-                if self.current_sample_path != self.live_sample_path:
-                    for label in self.data_for_cytometry_plots['transformations']:
-                        transformation = self.data_for_cytometry_plots['transformations'][label]
-                        if transformation.id == 'default':
-                            index = self.data_for_cytometry_plots['pnn'].index(label)
-                            upper_limit = max(self.data_for_cytometry_plots['event_data'][:, index]) * 1.05
-                            transformation.set_transform(limits=[0, upper_limit])
+                # for default transformations, set limits to observed data
+                if self.data_for_cytometry_plots['event_data'] is not None and len(self.data_for_cytometry_plots['event_data']):
+                    if self.current_sample_path != self.live_sample_path:
+                        for label in self.data_for_cytometry_plots['transformations']:
+                            transformation = self.data_for_cytometry_plots['transformations'][label]
+                            if transformation.id == 'default':
+                                index = self.data_for_cytometry_plots['pnn'].index(label)
+                                upper_limit = max(self.data_for_cytometry_plots['event_data'][:, index]) * 1.05
+                                transformation.set_transform(limits=[0, upper_limit])
 
-            self.data_for_cytometry_plots['statistics'] = initialise_stats(self.data_for_cytometry_plots['gating'])
-            self.data_for_cytometry_plots['histograms'] = initialise_hists(self.data_for_cytometry_plots['plots'], self.data_for_cytometry_plots)
+                self.data_for_cytometry_plots['statistics'] = initialise_stats(self.data_for_cytometry_plots['gating'])
+                self.data_for_cytometry_plots['histograms'] = initialise_hists(self.data_for_cytometry_plots['plots'], self.data_for_cytometry_plots)
 
-            # initialise plots
-            if self.bus and self.data_for_cytometry_plots['plots']:
-                self.bus.statusMessage.emit(f'Calculating {len(self.data_for_cytometry_plots['plots'])} histograms...')
-            self.calc_hists_and_stats(status_message_signal=(self.bus.statusMessage if self.bus else None))
+                # initialise plots
+                if self.bus and self.data_for_cytometry_plots['plots']:
+                    self.bus.statusMessage.emit(f'Calculating {len(self.data_for_cytometry_plots['plots'])} histograms...')
+                self.calc_hists_and_stats(status_message_signal=(self.bus.statusMessage if self.bus else None))
 
-            logger.info(f'Controller: prepared hists and stats, mode: {self.current_mode}')
-            if self.bus:
-                self.bus.statusMessage.emit(f'Ready.')
+                logger.info(f'Controller: prepared hists and stats, mode: {self.current_mode}')
+                if self.bus:
+                    self.bus.statusMessage.emit(f'Ready.')
 
-            # then if sample is live, start thread to calc hist and stats on updates... or calc once only
-            if not self.stop_live_data_processing.is_set() and self.current_sample_path == self.live_sample_path:
-                # start live update thread
-                self.thread = threading.Thread(target=self.update_hists_and_stats, args=(), daemon=True)
-                self.thread.start()
+                # then if sample is live, start thread to calc hist and stats on updates... or calc once only
+                if not self.stop_live_data_processing.is_set() and self.current_sample_path == self.live_sample_path:
+                    # start live update thread
+                    self.thread = threading.Thread(target=self.update_hists_and_stats, args=(), daemon=True)
+                    self.thread.start()
 
     @with_busy_cursor
     @Slot()
