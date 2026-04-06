@@ -52,6 +52,23 @@ base_directory = Path.home() / experiments_folder
 import logging
 logger = logging.getLogger(__name__)
 
+# ---- cytometry_data_dictionary ----
+# This dictionary comprises the ephemeral data for analysing raw or unmixed cytometry
+# Copies of this dictionary are made for the processes in the different tabs of the workflow:
+# raw, spectral process, unmixed, statistics, etc.
+cytometry_data_dictionary = {
+    'pnn': None, # list of channel names
+    'fluoro_indices': None, # list of fluorescence channel indices to the list of channel names
+    'lookup_tables': None, # dictionary of boolean lookup tables for each gate on the 1D or 2D plot on which the gate is defined (for fast gating)
+    'event_data': None, # event data (which may be raw or unmixed depending on the copy of the dictionary)
+    'transformations': None, # set of transformations for all channels
+    'statistics': {}, # event statistics for each gate in the hierarchy
+    'gating': GatingStrategy(), # flowkit.GatingStrategy object used to define the gating lookup tables
+    'plots': [], # set of cytometry plot definitions (1D histograms, 2D histograms, ribbon plots referencing the channel names, source gates and child gates
+    'histograms': [], # set of 1D and 2D histograms for plotting on the plots
+    'gate_membership': {} # dictionary of gate membership for each gate, boolean array corresponding to event_data
+}
+
 class Controller(QObject):
     def __init__(self,
         events_cache_name=None,
@@ -81,18 +98,7 @@ class Controller(QObject):
         self.unmixed_transformations = None
         self.raw_gating = None
         self.unmixed_gating = None
-        self.data_for_cytometry_plots = {
-            'pnn': None,
-            'fluoro_indices': None,
-            'lookup_tables': None,
-            'event_data': None,
-            'transformations': None,
-            'statistics': {},
-            'gating': GatingStrategy(),
-            'plots': [],
-            'histograms': [],
-            'gate_membership': {}
-        }
+        self.data_for_cytometry_plots = deepcopy(cytometry_data_dictionary)
         self.data_for_cytometry_plots_raw = deepcopy(self.data_for_cytometry_plots)
         self.data_for_cytometry_plots_process = deepcopy(self.data_for_cytometry_plots)
         self.data_for_cytometry_plots_unmixed = deepcopy(self.data_for_cytometry_plots)

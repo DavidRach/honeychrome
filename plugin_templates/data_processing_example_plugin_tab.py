@@ -28,13 +28,37 @@ plugin_name = 'Data Processing Example Plugin'
 table_headers = ['Index', 'Colour', 'Count']
 
 
+def apply_gate_by_lookup_table(cytometry_data_dictionary, gate_name):
+    """
+    apply_gate_by_lookup_table:
+    This function calculates gate membership according to the fast method (lookup tables)
+    :param cytometry_data_dictionary: cytometry data dictionary comprises ephemeral data required for cytometry data processing
+    :param gate_name: name of gate (string)
+    :return: gated_sample_data: set of event data that belongs to gate
+    """
+    # first mark all events as belonging to root gate
+    gate_membership = {'root': np.ones(len(cytometry_data_dictionary['event_data']), dtype=np.bool_)}
+    cytometry_data_dictionary.update({'gate_membership': gate_membership})
+    gates_to_calculate = [g[0] for g in cytometry_data_dictionary['gating'].get_gate_ids()]
+    # second run apply_gates_in_place function to calculate gate_membership within the cytometry data dictionary
+    apply_gates_in_place(cytometry_data_dictionary, gates_to_calculate=gates_to_calculate)
+    gate_membership = cytometry_data_dictionary['gate_membership'][gate_name]
+    gated_sample_data = cytometry_data_dictionary['event_data'][gate_membership]
+    return gated_sample_data
+
 class PluginWidget(QWidget):
     """
     The main UI container for the plugin.
 
     Required arguments:
         bus: the signals to communicate with the rest of the honeychrome app
-        controller: the honeychrome controller including all ephemeral data and the experiment model
+        controller: the honeychrome controller including all ephemeral data, the experiment model and sample. In particular:
+            controller.experiment: the experiment model (the honeychrome data)
+            controller.current_sample: flowkit.Sample object containing the current sample (raw data)
+            cytometry data dictionaries: (see definition in controller)
+                controller.data_for_cytometry_plots_raw: ephemeral data for raw cytometry
+                controller.data_for_cytometry_plots_process: ephemeral data for spectral process cytometry
+                controller.data_for_cytometry_plots_unmixed: ephemeral data for unmixed cytometry
 
     This plugin processes a selection of sample FCS files according to a gate in the unmixed data. It trains a UMAP reducer model on the selection,
     and a clusterer model on top of the UMAP embedding. Then embedding and clusters can be predicted for any selected sample.
@@ -193,7 +217,8 @@ class PluginWidget(QWidget):
             return
 
         # load sample FCS files, concatenate data, apply gating
-        # use the "data_for_cytometry_plots_unmixed" cytometry data dictionary, which contains the channel, transforms and gating definitions for the unmixed data
+        # use the "data_for_cytometry_plots_unmixed" version of the cytometry data dictionary,
+        # since this contains the channel, gating definitions and lookup tables for the unmixed data
         # copy this dictionary to avoid interference with the unmixed cytometry tab
         cytometry_data_dictionary = self.controller.data_for_cytometry_plots_unmixed.copy()
         gated_sample_data_all = []
@@ -208,16 +233,7 @@ class PluginWidget(QWidget):
                 # apply unmixing via transfer matrix
                 unmixed_event_data = apply_transfer_matrix(self.controller.transfer_matrix, raw_event_data)
                 cytometry_data_dictionary.update({'event_data': unmixed_event_data})
-
-                # apply gates
-                # first mark all events as belonging to root gate
-                # second run apply_gates_in_place function to calculate gate_membership within the cytometry data dictionary
-                gate_membership = {'root': np.ones(len(cytometry_data_dictionary['event_data']), dtype=np.bool_)}
-                cytometry_data_dictionary.update({'gate_membership': gate_membership})
-                gates_to_calculate = [g[0] for g in cytometry_data_dictionary['gating'].get_gate_ids()]
-                apply_gates_in_place(cytometry_data_dictionary, gates_to_calculate=gates_to_calculate)
-                gate_membership = cytometry_data_dictionary['gate_membership'][gate_name]
-                gated_sample_data = cytometry_data_dictionary['event_data'][gate_membership]
+                gated_sample_data = apply_gate_by_lookup_table(cytometry_data_dictionary, gate_name)
                 gated_sample_data_all.append(gated_sample_data)
                 self.progress_message(f'{datetime.now():%H:%M:%S} Loaded {sample_name}: {len(gated_sample_data)}/{n_events} events within {gate_name}')
             else:
@@ -288,7 +304,7 @@ class PluginWidget(QWidget):
                     self.progress_message('Please select a gate.')
                     return
 
-                cytometry_data = self.controller.data_for_cytometry_plots_unmixed.copy()
+                cytometry_data_dictionary = self.controller.data_for_cytometry_plots_unmixed.copy()
 
                 full_sample_path = str(self.controller.experiment_dir / sample_path)
                 sample = sample_from_fcs(full_sample_path)
@@ -297,14 +313,9 @@ class PluginWidget(QWidget):
 
                 if n_events > 0:
                     unmixed_event_data = apply_transfer_matrix(self.controller.transfer_matrix, raw_event_data)
-                    cytometry_data.update({'event_data': unmixed_event_data})
+                    cytometry_data_dictionary.update({'event_data': unmixed_event_data})
+                    gated_sample_data = apply_gate_by_lookup_table(cytometry_data_dictionary, gate_name)
 
-                    gate_membership = {'root': np.ones(len(cytometry_data['event_data']), dtype=np.bool_)}
-                    cytometry_data.update({'gate_membership': gate_membership})
-                    gates_to_calculate = [g[0] for g in cytometry_data['gating'].get_gate_ids()]
-                    apply_gates_in_place(cytometry_data, gates_to_calculate=gates_to_calculate)
-                    gate_membership = cytometry_data['gate_membership'][gate_name]
-                    gated_sample_data = cytometry_data['event_data'][gate_membership]
                     self.progress_message(f'{datetime.now():%H:%M:%S} Loaded {sample_path}: {len(gated_sample_data)}/{n_events} events within {gate_name}')
                 else:
                     self.progress_message(f'Cannot process sample: 0 events in {sample_path}.')
