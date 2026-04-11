@@ -70,10 +70,7 @@ jobs:
         with:
           name: build-${{ matrix.os }}
           path: |
-            dist/*.exe
-            dist/*.dmg
-            dist/*.deb
-            dist/*.tar.gz
-            bin/*
+            *.tar.gz
             *.dmg
             *.exe
+            dist/honeychrome/

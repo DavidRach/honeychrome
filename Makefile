@@ -1,7 +1,13 @@
 # Variables
-PYTHON = .venv/bin/python
+PYTHON = python
 BUILD_SCRIPT = build.py
 INSTALL_SCRIPT = install_linux.sh
+
+# Detect if we are inside a venv locally.
+# If .venv exists, use that path; otherwise use system python (perfect for GitHub)
+ifeq ($(shell test -f .venv/bin/python && echo yes),yes)
+	PYTHON = .venv/bin/python
+endif
 
 .PHONY: help venv build install clean
 
