@@ -1,21 +1,28 @@
 name: Multi-Platform Build
+run-name: Build for all platforms (Node 24)
 
 on:
   push:
     branches: [ main ]
-  workflow_dispatch: # Allows you to run it manually
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-20.04
             artifact_name: linux-x64
+          - os: ubuntu-24.04
+            artifact_name: linux-x64
           - os: windows-2022
             artifact_name: win-x64
-          - os: macos-13
+          - os: macos-14
             artifact_name: mac-intel
           - os: macos-latest
             artifact_name: mac-arm64
@@ -40,13 +47,22 @@ jobs:
       - name: Build Linux (Ubuntu)
         if: startsWith(matrix.os, 'ubuntu')
         run: |
+          make venv
           make package
 
-      - name: Build macOS
+      - name: Build macOS (arm64)
         if: matrix.os == 'macos-latest'
-        run: |
-          make venv
+        run: | 
           make build
+          brew install create-dmg
+          chmod +x create_dmg_mac.sh
+          ./create_dmg_mac.sh
+
+      - name: Build macOS (intel)
+        if: matrix.os == 'macos-14'
+        run: | 
+          make build
+          brew install create-dmg
           chmod +x create_dmg_mac.sh
           ./create_dmg_mac.sh
 
@@ -56,7 +72,7 @@ jobs:
           python build.py
           # You can run your Inno Setup script here. 
           # GitHub Windows runners have 'ISCC' (Inno Setup Compiler) pre-installed.
-          ISCC inno_script.iss
+          ISCC honeychrome.iss
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
