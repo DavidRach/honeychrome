@@ -29,10 +29,10 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
           cache: 'pip'
@@ -47,19 +47,10 @@ jobs:
       - name: Build Linux (Ubuntu)
         if: startsWith(matrix.os, 'ubuntu')
         run: |
-          make venv
           make package
 
-      - name: Build macOS (arm64)
-        if: matrix.os == 'macos-latest'
-        run: | 
-          make build
-          brew install create-dmg
-          chmod +x create_dmg_mac.sh
-          ./create_dmg_mac.sh
-
-      - name: Build macOS (intel)
-        if: matrix.os == 'macos-14'
+      - name: Build macOS
+        if: startsWith(matrix.os, 'macos')
         run: | 
           make build
           brew install create-dmg
@@ -67,7 +58,7 @@ jobs:
           ./create_dmg_mac.sh
 
       - name: Build Windows
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2022'
         run: |
           python build.py
           # You can run your Inno Setup script here. 
@@ -75,10 +66,14 @@ jobs:
           ISCC honeychrome.iss
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: build-${{ matrix.os }}
           path: |
-            dist/*
+            dist/*.exe
+            dist/*.dmg
+            dist/*.deb
+            dist/*.tar.gz
+            bin/*
             *.dmg
             *.exe
