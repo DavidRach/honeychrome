@@ -36,17 +36,17 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 ChangesAssociations=yes
 DisableProgramGroupPage=yes
-LicenseFile=C:\Users\Samson.Rogers\PycharmProjects\honeychrome\LICENSE.txt
-InfoAfterFile=C:\Users\Samson.Rogers\PycharmProjects\honeychrome\README.rtf
+LicenseFile=LICENSE.txt
+InfoAfterFile=README.rtf
 ; Remove the following line to run in administrative install mode (install for all users).
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 Compression=lzma/ultra64
 SolidCompression=yes
 WizardStyle=modern dynamic
-OutputDir=C:\Users\Samson.Rogers\PycharmProjects\honeychrome\dist
+OutputDir=dist
 OutputBaseFilename=Honeychrome-v{#MyAppVersion}-windows-x64
-SetupIconFile=C:\Users\Samson.Rogers\PycharmProjects\honeychrome\dist\honeychrome\_internal\honeychrome\view_components\assets\cytkit_web_logo.ico
+SetupIconFile=dist\honeychrome\_internal\honeychrome\view_components\assets\cytkit_web_logo.ico
 VersionInfoCompany={#MyAppPublisher}
 VersionInfoDescription=Honeychrome Cytometry Software
 VersionInfoTextVersion={#MyAppPublisher}
@@ -59,8 +59,8 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "C:\Users\Samson.Rogers\PycharmProjects\honeychrome\dist\honeychrome\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\Samson.Rogers\PycharmProjects\honeychrome\dist\honeychrome\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "dist\honeychrome\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "dist\honeychrome\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Registry]
