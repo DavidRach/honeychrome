@@ -1,5 +1,5 @@
 name: Multi-Platform Build
-run-name: Build for all platforms (Node 24)
+run-name: Build for all platforms
 
 on:
   push:
@@ -71,8 +71,6 @@ jobs:
         with:
           name: ${{ matrix.artifact_name }}
           path: |
-            dist/*.exe
-            dist/*.dmg
-            dist/*.tar.gz
-            honeychrome-installer.dmg
-            *.tar.gz
+            **/*.exe
+            **/*.dmg
+            **/*.tar.gz
