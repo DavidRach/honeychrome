@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Quick Start
+title: Spectral Analysis
 ---
 [Cytkit](https://cytkit.com) | [Honeychrome](./) 
 ---
